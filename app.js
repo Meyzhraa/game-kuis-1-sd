@@ -850,13 +850,20 @@ function showRetryFeedback(customMsg) {
 
 function handleQuestionSuccess(explanation) {
     activeSession.solvedCurrent = true;
-    activeSession.correct++;
-    const earned = activeSession.attemptsOnCurrent === 0 ? 2 : 1;
+    const isFirstTry = activeSession.attemptsOnCurrent === 0;
+
+    if (isFirstTry) {
+        activeSession.correct++;
+    } else {
+        activeSession.wrong++;
+    }
+
+    const earned = isFirstTry ? 2 : 1;
     activeSession.starsEarned += earned;
     appData.stars += earned;
 
     const q = activeSession.questions[activeSession.index];
-    recordIndicatorResult(q, true);
+    recordIndicatorResult(q, isFirstTry);
     saveData();
 
     sfxCorrect();
