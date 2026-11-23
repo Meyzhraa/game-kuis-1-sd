@@ -81,39 +81,73 @@ function ensureAudio() {
         const AC = window.AudioContext || window.webkitAudioContext;
         if (AC) audioCtx = new AC();
     }
-    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
     return audioCtx;
 }
 
-function playTone(freq, type, dur, delay = 0, vol = 0.14) {
+// Buka kunci audio otomatis pada sentuhan/klik pertama di layar HP
+['touchstart', 'pointerdown', 'click'].forEach(evt => {
+    document.addEventListener(evt, () => ensureAudio(), { once: true, passive: true });
+});
+
+// Bunyi otomatis setiap kali menekan tombol atau kotak jawaban apa pun
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button, .btn-3d, .btn-opt');
+    if (btn && !btn.disabled) {
+        sfxClick();
+    }
+});
+
+function playTone(freq, type, dur, delay = 0, vol = 0.25) {
     if (!appData.soundOn) return;
     const ctx = ensureAudio();
     if (!ctx) return;
+
+    const startTime = ctx.currentTime + delay;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
+
     osc.type = type;
-    osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
-    gain.gain.setValueAtTime(vol, ctx.currentTime + delay);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
+    osc.frequency.setValueAtTime(freq, startTime);
+
+    gain.gain.setValueAtTime(0.001, startTime);
+    gain.gain.linearRampToValueAtTime(vol, startTime + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
+
     osc.connect(gain);
     gain.connect(ctx.destination);
-    osc.start(ctx.currentTime + delay);
-    osc.stop(ctx.currentTime + delay + dur);
+
+    osc.start(startTime);
+    osc.stop(startTime + dur + 0.02);
 }
 
-function sfxClick() { playTone(540, 'sine', 0.07, 0, 0.09); }
+// 1. Bunyi setiap mencet tombol ("pop" ceria)
+function sfxClick() {
+    playTone(620, 'sine', 0.08, 0, 0.16);
+    playTone(880, 'sine', 0.06, 0.03, 0.10);
+}
+
+// 2. Bunyi ketika jawaban BENAR (nada naik ceria Do-Mi-Sol-Do)
 function sfxCorrect() {
-    playTone(523.25, 'triangle', 0.13, 0, 0.18);
-    playTone(659.25, 'triangle', 0.13, 0.09, 0.18);
-    playTone(783.99, 'triangle', 0.13, 0.18, 0.18);
-    playTone(1046.50, 'triangle', 0.32, 0.27, 0.22);
+    playTone(523.25, 'triangle', 0.14, 0, 0.28);
+    playTone(659.25, 'triangle', 0.14, 0.10, 0.28);
+    playTone(783.99, 'triangle', 0.14, 0.20, 0.28);
+    playTone(1046.50, 'triangle', 0.35, 0.30, 0.32);
 }
+
+// 3. Bunyi ketika jawaban SALAH ("tet-tot" lembut ramah anak)
 function sfxWrong() {
-    playTone(320, 'sine', 0.16, 0, 0.13);
-    playTone(270, 'sine', 0.24, 0.13, 0.13);
+    playTone(310, 'sawtooth', 0.18, 0, 0.18);
+    playTone(230, 'sawtooth', 0.30, 0.16, 0.20);
 }
+
+// 4. Bunyi saat menyelesaikan kuis (fanfare kemenangan)
 function sfxVictory() {
-    [523.25, 659.25, 783.99, 1046.5, 783.99, 1046.5].forEach((f, i) => playTone(f, 'triangle', 0.24, i * 0.12, 0.2));
+    [523.25, 659.25, 783.99, 1046.5, 783.99, 1046.5].forEach((f, i) => {
+        playTone(f, 'triangle', 0.25, i * 0.12, 0.28);
+    });
 }
 
 function toggleSound() {
@@ -649,13 +683,27 @@ function evaluateFill() {
 }
 
 /* --- Evaluasi Essay Sederhana (Kata Kunci + Opsi Cek Orang Tua) --- */
+function isSimilarWord(word, keyword) {
+    if (word.includes(keyword) || keyword.includes(word)) return true;
+    if (keyword.length < 5 || Math.abs(word.length - keyword.length) > 1) return false;
+    // Cek kemiripan huruf (toleransi salah ketik 1 huruf)
+    let diff = 0;
+    const minLen = Math.min(word.length, keyword.length);
+    for (let i = 0; i < minLen; i++) {
+        if (word[i] !== keyword[i]) diff++;
+    }
+    diff += Math.abs(word.length - keyword.length);
+    return diff <= 1;
+}
+
 function evaluateEssay(forceParentCheck) {
     if (activeSession.solvedCurrent) return;
     const q = activeSession.questions[activeSession.index];
     const inp = document.getElementById('essay-input');
-    const val = inp.value.trim().toLowerCase();
+    const rawVal = inp.value.trim();
+    const cleanVal = rawVal.toLowerCase().replace(/[.,!?"]/g, '');
 
-    if (!val && !forceParentCheck) {
+    if (!cleanVal && !forceParentCheck) {
         inp.classList.add('animate-wiggle', 'border-rose-400');
         setTimeout(() => inp.classList.remove('animate-wiggle', 'border-rose-400'), 450);
         return;
@@ -665,20 +713,24 @@ function evaluateEssay(forceParentCheck) {
     document.getElementById('essay-submit').disabled = true;
     document.getElementById('essay-parent-check').disabled = true;
 
-    const matchedKeyword = q.keywords.some(kw => val.includes(kw.toLowerCase()));
+    const userWords = cleanVal.split(/\s+/);
+    const matchedKeyword = q.keywords.some(kw => {
+        const k = kw.toLowerCase();
+        return cleanVal.includes(k) || userWords.some(w => isSimilarWord(w, k));
+    });
+
     if (!forceParentCheck && matchedKeyword) {
-        handleQuestionSuccess(`Contoh jawaban ideal: "${q.sampleAnswer}". ${q.explanation}`);
+        handleQuestionSuccess(`Bagus sekali! Contoh jawaban lengkap: "${q.sampleAnswer}". ${q.explanation}`);
     } else {
-        // Simpan di log orang tua untuk dicek bersama
         appData.wrongLog.unshift({
             q: q.q,
             subjectName: SUBJECTS[q.subject].name,
             indicator: q.indicator,
-            correctAns: `Perlu dicek Orang Tua (Jawaban anak: "${inp.value.trim() || '-'}")`,
+            correctAns: `Perlu dicek Orang Tua (Jawaban anak: "${rawVal || '-'}")`,
             time: new Date().toLocaleDateString('id-ID')
         });
         saveData();
-        handleQuestionSuccess(`Hebat sudah mencoba menulis! Jawabanmu dicatat untuk dicek Ayah/Ibu. Contoh jawaban: "${q.sampleAnswer}".`);
+        handleQuestionSuccess(`Hebat sudah berani menulis! Jawabanmu dicatat untuk dicek Ayah/Ibu. Contoh jawaban: "${q.sampleAnswer}".`);
     }
 }
 
