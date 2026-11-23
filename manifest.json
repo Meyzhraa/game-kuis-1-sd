@@ -1,0 +1,24 @@
+{
+  "name": "Petualangan Bintang Kelas 1 SDQ Al Mahmudah",
+  "short_name": "Petualangan Bintang",
+  "description": "Aplikasi belajar interaktif SAS 1 Kelas 1 SDQ Al Mahmudah",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#E0F2FE",
+  "theme_color": "#0284C7",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

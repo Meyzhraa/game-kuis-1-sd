@@ -1,0 +1,65 @@
+body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(180deg, #E0F2FE 0%, #F3E8FF 52%, #FEF9C3 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+}
+
+h1, h2, h3, .font-fredoka {
+    font-family: 'Fredoka', sans-serif;
+}
+
+.btn-3d {
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    box-shadow: 0 5px 0 rgba(15, 23, 42, 0.2);
+}
+
+.btn-3d:active:not(:disabled) {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 rgba(15, 23, 42, 0.2);
+}
+
+.btn-opt {
+    transition: all 0.15s ease;
+    box-shadow: 0 5px 0 #CBD5E1;
+}
+
+.btn-opt:active:not(:disabled) {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 #CBD5E1;
+}
+
+.opt-correct {
+    background-color: #22C55E !important;
+    border-color: #15803D !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 5px 0 #15803D !important;
+}
+
+.opt-wrong {
+    background-color: #EF4444 !important;
+    border-color: #B91C1C !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 5px 0 #B91C1C !important;
+}
+
+.bg-dots {
+    background-image: radial-gradient(#BAE6FD 2px, transparent 2px);
+    background-size: 26px 26px;
+}
+
+.arabic {
+    font-family: 'Traditional Arabic', 'Amiri', 'Scheherazade New', serif;
+    direction: rtl;
+    line-height: 1.9;
+}
+
+#confetti-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+}

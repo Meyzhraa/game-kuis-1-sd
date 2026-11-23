@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0284C7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Petualangan Bintang">
+    <title>Petualangan Bintang Kelas 1 SDQ Al Mahmudah</title>
+
+    <!-- PWA Manifest & Ikon Layar Utama HP -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
+
+    <!-- Tailwind & Google Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['Fredoka', 'sans-serif'],
+                        body: ['Nunito', 'sans-serif'],
+                    },
+                    animation: {
+                        'float': 'float 3.2s ease-in-out infinite',
+                        'wiggle': 'wiggle 0.45s ease-in-out',
+                        'pop': 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                        'pulse-slow': 'pulse 2.5s infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-8px)' },
+                        },
+                        wiggle: {
+                            '0%, 100%': { transform: 'rotate(0deg)' },
+                            '25%': { transform: 'rotate(-4deg)' },
+                            '75%': { transform: 'rotate(4deg)' },
+                        },
+                        pop: {
+                            '0%': { transform: 'scale(0.88)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-dots text-slate-800 select-none">
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- ==================== HEADER UTAMA ==================== -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-4 border-sky-200 px-3 sm:px-6 py-2.5 shadow-sm">
+        <div class="max-w-5xl mx-auto flex items-center justify-between gap-2">
+            <!-- Brand -->
+            <button onclick="navigate('home')" class="flex items-center gap-2.5 text-left group">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-2xl shadow group-hover:scale-105 transition">
+                    🚀
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-xl font-bold text-sky-950 leading-tight">Petualangan Bintang</h1>
+                    <p class="text-[11px] sm:text-xs font-extrabold text-amber-600">Kelas 1 • SDQ Al Mahmudah</p>
+                </div>
+            </button>
+
+            <!-- Status & Controls -->
+            <div class="flex items-center gap-1.5 sm:gap-2.5">
+                <!-- Toggle Musik & Efek Suara -->
+                <button id="btn-sound" onclick="toggleSound()" title="Suara Efek" class="p-2 sm:p-2.5 rounded-2xl bg-sky-100 hover:bg-sky-200 text-sky-800 text-base sm:text-lg font-bold transition">
+                    🔊
+                </button>
+                <button id="btn-bgm" onclick="toggleBGM()" title="Musik Latar" class="p-2 sm:p-2.5 rounded-2xl bg-purple-100 hover:bg-purple-200 text-purple-800 text-base sm:text-lg font-bold transition">
+                    🎵
+                </button>
+
+                <!-- Bintang -->
+                <div class="flex items-center gap-1 bg-amber-100 border-2 border-amber-300 px-2.5 sm:px-3 py-1.5 rounded-2xl">
+                    <span class="text-lg sm:text-xl">⭐</span>
+                    <span id="hdr-stars" class="font-fredoka font-bold text-amber-900 text-sm sm:text-lg">0</span>
+                </div>
+
+                <!-- Badge -->
+                <button onclick="navigate('badges')" class="btn-3d bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-1">
+                    <span>🏆</span>
+                    <span id="hdr-badges">0/13</span>
+                </button>
+
+                <!-- Orang Tua -->
+                <button onclick="openParentGate()" title="Dashboard Orang Tua" class="p-2 sm:p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-sm sm:text-base font-bold">
+                    🔒
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== MAIN CONTAINER ==================== -->
+    <main class="max-w-5xl mx-auto px-3 sm:px-6 py-5 pb-20">
+
+        <!-- ==================== 1. DASHBOARD UTAMA ==================== -->
+        <section id="view-home" class="animate-pop space-y-6">
+            <!-- Hero Card -->
+            <div class="bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-600 rounded-3xl p-5 sm:p-7 text-white shadow-xl border-b-8 border-indigo-900 relative overflow-hidden">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-5 relative z-10">
+                    <div class="text-center md:text-left space-y-2.5 flex-1">
+                        <div class="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3.5 py-1 rounded-full text-xs sm:text-sm font-extrabold">
+                            <span>🌈 SAS 1 • TA 2026/2027</span>
+                            <span>•</span>
+                            <button onclick="promptPlayerName()" class="underline decoration-amber-300 hover:text-amber-200">
+                                Halo, <span id="home-player-name">Anak Hebat</span>! ✏️
+                            </button>
+                        </div>
+                        <h2 class="text-2xl sm:text-4xl font-bold leading-snug">
+                            Ayo Jelajahi Galaksi Ilmu & Kumpulkan Bintang! ✨
+                        </h2>
+                        <p class="text-sky-100 text-sm sm:text-base font-semibold max-w-xl">
+                            Belajar sambil bermain untuk persiapan ujian tulis dan praktik Kelas 1 SDQ Al Mahmudah!
+                        </p>
+
+                        <!-- Progress Bar Keseluruhan & Level Anak -->
+                        <div class="bg-white/15 rounded-2xl p-3 max-w-md mx-auto md:mx-0">
+                            <div class="flex justify-between text-xs sm:text-sm font-extrabold mb-1">
+                                <span id="home-rank">🌱 Level 1: Bintang Pemula</span>
+                                <span id="home-progress-text">0% Selesai</span>
+                            </div>
+                            <div class="w-full bg-indigo-950/50 h-3.5 rounded-full overflow-hidden p-0.5">
+                                <div id="home-progress-bar" class="bg-gradient-to-r from-amber-300 to-yellow-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Maskot Bintang Roket -->
+                    <div class="w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 animate-float">
+                        <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-xl">
+                            <circle cx="100" cy="100" r="88" fill="#FEF08A" opacity="0.22"/>
+                            <path d="M100 16 L124 67 L180 74 L139 113 L150 169 L100 142 L50 169 L61 113 L20 74 L76 67 Z" fill="#FACC15" stroke="#EA580C" stroke-width="6" stroke-linejoin="round"/>
+                            <circle cx="80" cy="95" r="7.5" fill="#1E293B"/>
+                            <circle cx="120" cy="95" r="7.5" fill="#1E293B"/>
+                            <circle cx="82.5" cy="92.5" r="2.5" fill="#FFF"/>
+                            <circle cx="122.5" cy="92.5" r="2.5" fill="#FFF"/>
+                            <ellipse cx="69" cy="108" rx="7" ry="4.5" fill="#FB7185" opacity="0.75"/>
+                            <ellipse cx="131" cy="108" rx="7" ry="4.5" fill="#FB7185" opacity="0.75"/>
+                            <path d="M87 113 Q100 128 113 113" fill="none" stroke="#1E293B" stroke-width="5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tombol Aksi Utama -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                <button onclick="navigate('map')" class="btn-3d bg-gradient-to-br from-amber-400 to-orange-500 text-slate-950 rounded-3xl p-5 text-left flex items-center sm:flex-col sm:items-start gap-4 border-b-4 border-orange-700">
+                    <span class="text-4xl sm:text-5xl">🗺️</span>
+                    <div>
+                        <h3 class="font-fredoka text-xl sm:text-2xl font-bold">MULAI PETUALANGAN</h3>
+                        <p class="text-xs sm:text-sm font-extrabold text-amber-950/80">Jelajahi 5 Pulau & Level</p>
+                    </div>
+                </button>
+
+                <button onclick="navigate('study')" class="btn-3d bg-gradient-to-br from-sky-400 to-blue-600 text-white rounded-3xl p-5 text-left flex items-center sm:flex-col sm:items-start gap-4 border-b-4 border-blue-800">
+                    <span class="text-4xl sm:text-5xl">📖</span>
+                    <div>
+                        <h3 class="font-fredoka text-xl sm:text-2xl font-bold">MODE BELAJAR</h3>
+                        <p class="text-xs sm:text-sm font-bold text-sky-100">Pilih Mapel & Indikator</p>
+                    </div>
+                </button>
+
+                <button onclick="openPracticeSetup()" class="btn-3d bg-gradient-to-br from-emerald-400 to-teal-600 text-white rounded-3xl p-5 text-left flex items-center sm:flex-col sm:items-start gap-4 border-b-4 border-teal-800">
+                    <span class="text-4xl sm:text-5xl">🎯</span>
+                    <div>
+                        <h3 class="font-fredoka text-xl sm:text-2xl font-bold">MODE LATIHAN</h3>
+                        <p class="text-xs sm:text-sm font-bold text-emerald-100">Soal Acak Beragam Tipe</p>
+                    </div>
+                </button>
+
+                <button onclick="openChallengeSetup()" class="btn-3d bg-gradient-to-br from-fuchsia-500 to-purple-700 text-white rounded-3xl p-5 text-left flex items-center sm:flex-col sm:items-start gap-4 border-b-4 border-purple-900">
+                    <span class="text-4xl sm:text-5xl">👑</span>
+                    <div>
+                        <h3 class="font-fredoka text-xl sm:text-2xl font-bold">MODE TANTANGAN</h3>
+                        <p class="text-xs sm:text-sm font-bold text-fuchsia-100">Bos Level Semua Mapel</p>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Ringkasan Cepat 5 Dunia Petualangan -->
+            <div class="bg-white rounded-3xl p-5 shadow-md border-2 border-sky-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl sm:text-2xl font-bold text-sky-950">🌌 5 Pulau Dunia Petualangan</h3>
+                    <button onclick="navigate('map')" class="text-sm font-extrabold text-sky-600 hover:underline">Buka Peta ➡️</button>
+                </div>
+                <div id="home-worlds-preview" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3"></div>
+            </div>
+        </section>
+
+        <!-- ==================== 2. PETA DUNIA PETUALANGAN ==================== -->
+        <section id="view-map" class="hidden animate-pop space-y-5">
+            <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-3xl shadow-sm border-2 border-sky-200">
+                <button onclick="navigate('home')" class="btn-3d bg-slate-100 text-slate-700 font-bold px-4 py-2 rounded-2xl text-sm">⬅️ Beranda</button>
+                <h2 class="text-xl sm:text-2xl font-bold text-sky-950">🗺️ Peta Petualangan Bintang</h2>
+                <span id="map-total-levels" class="text-xs sm:text-sm font-extrabold bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full">0 Level Selesai</span>
+            </div>
+
+            <!-- Tab Pilih Pulau -->
+            <div id="world-tabs" class="flex gap-2 overflow-x-auto pb-2"></div>
+
+            <!-- Detail Pulau & Level Bertahap -->
+            <div id="world-detail-container" class="space-y-4"></div>
+        </section>
+
+        <!-- ==================== 3. MODE BELAJAR (BEBAS PILIH MAPEL & INDIKATOR) ==================== -->
+        <section id="view-study" class="hidden animate-pop space-y-5">
+            <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-3xl shadow-sm border-2 border-sky-200">
+                <button onclick="navigate('home')" class="btn-3d bg-slate-100 text-slate-700 font-bold px-4 py-2 rounded-2xl text-sm">⬅️ Beranda</button>
+                <h2 class="text-xl sm:text-2xl font-bold text-sky-950">📖 Mode Belajar (Pilih Mapel)</h2>
+                <span class="text-xs font-extrabold bg-sky-100 text-sky-800 px-3 py-1.5 rounded-full">Tanpa Batas Waktu</span>
+            </div>
+
+            <div id="study-subjects-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </section>
+
+        <!-- ==================== 4. MODAL/HALAMAN SETUP LATIHAN & TANTANGAN ==================== -->
+        <section id="view-setup" class="hidden animate-pop max-w-xl mx-auto">
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-b-8 border-emerald-300 space-y-5">
+                <div class="flex items-center justify-between">
+                    <button onclick="navigate('home')" class="btn-3d bg-slate-100 text-slate-700 font-bold px-3.5 py-2 rounded-xl text-sm">⬅️ Kembali</button>
+                    <span id="setup-badge" class="text-xs font-extrabold uppercase bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">Mode Latihan</span>
+                </div>
+
+                <div class="text-center">
+                    <div id="setup-icon" class="text-6xl mb-2">🎯</div>
+                    <h2 id="setup-title" class="text-2xl sm:text-3xl font-bold text-slate-800">Atur Latihanmu</h2>
+                    <p id="setup-desc" class="text-sm font-bold text-slate-500 mt-1">Pilih mata pelajaran dan jumlah soal yang kamu inginkan!</p>
+                </div>
+
+                <div id="setup-subject-wrapper" class="space-y-1.5">
+                    <label class="block text-sm font-extrabold text-slate-700">Pilih Mata Pelajaran:</label>
+                    <select id="setup-subject-select" class="w-full p-3.5 rounded-2xl border-2 border-slate-300 font-bold text-slate-800 bg-slate-50 focus:border-sky-500 outline-none">
+                        <option value="ALL">🌟 Semua Mata Pelajaran (Campuran)</option>
+                    </select>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block text-sm font-extrabold text-slate-700">Jumlah Soal:</label>
+                    <div class="grid grid-cols-3 gap-2.5" id="setup-count-btns">
+                        <button type="button" onclick="selectSetupCount(5, this)" class="setup-cnt-btn p-3 rounded-2xl border-2 border-sky-500 bg-sky-100 text-sky-900 font-fredoka font-bold text-lg">5 Soal</button>
+                        <button type="button" onclick="selectSetupCount(10, this)" class="setup-cnt-btn p-3 rounded-2xl border-2 border-slate-200 bg-white text-slate-700 font-fredoka font-bold text-lg">10 Soal</button>
+                        <button type="button" onclick="selectSetupCount(15, this)" class="setup-cnt-btn p-3 rounded-2xl border-2 border-slate-200 bg-white text-slate-700 font-fredoka font-bold text-lg">15 Soal</button>
+                    </div>
+                </div>
+
+                <div id="setup-timer-wrapper" class="hidden bg-purple-50 border-2 border-purple-200 rounded-2xl p-4 flex items-center justify-between">
+                    <div>
+                        <p class="font-extrabold text-purple-950 text-sm">⏱️ Gunakan Timer Santai (Opsional)</p>
+                        <p class="text-xs font-bold text-purple-700">Matikan jika ingin mengerjakan dengan tenang</p>
+                    </div>
+                    <input type="checkbox" id="setup-timer-toggle" class="w-6 h-6 accent-purple-600 rounded cursor-pointer">
+                </div>
+
+                <button onclick="launchConfiguredSession()" class="btn-3d w-full bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-fredoka font-bold text-xl py-4 rounded-2xl">
+                    🚀 Mulai Sekarang!
+                </button>
+            </div>
+        </section>
+
+        <!-- ==================== 5. ARENA PENGERJAAN SOAL ==================== -->
+        <section id="view-play" class="hidden animate-pop space-y-4">
+            <!-- Header Soal -->
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-200">
+                <div class="flex items-center justify-between gap-2 mb-2.5">
+                    <button onclick="confirmExitPlay()" class="btn-3d bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-xl text-xs sm:text-sm">
+                        ⬅️ Keluar
+                    </button>
+                    <div class="text-center flex-1 truncate">
+                        <span id="play-header-title" class="inline-block bg-sky-100 text-sky-900 font-extrabold text-xs sm:text-sm px-3 py-1 rounded-full truncate max-w-full">
+                            Mata Pelajaran • Level 1
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span id="play-timer-pill" class="hidden font-fredoka font-bold text-rose-700 bg-rose-100 border border-rose-300 px-2.5 py-1 rounded-xl text-xs sm:text-sm">
+                            ⏱️ 00:00
+                        </span>
+                        <span class="font-fredoka font-bold text-amber-900 bg-amber-100 border border-amber-300 px-3 py-1 rounded-xl text-xs sm:text-sm">
+                            <span id="play-q-num">1</span>/<span id="play-q-total">5</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="w-full bg-slate-200 h-3.5 rounded-full overflow-hidden p-0.5">
+                    <div id="play-progress-bar" class="bg-gradient-to-r from-emerald-400 to-teal-500 h-full rounded-full transition-all duration-300" style="width: 10%"></div>
+                </div>
+            </div>
+
+            <!-- Kartu Soal -->
+            <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border-b-8 border-sky-200 space-y-4">
+                <!-- Indikator, Tipe Soal & Tombol Bantuan -->
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <span id="play-q-type-badge" class="text-[11px] font-extrabold uppercase bg-purple-100 text-purple-800 px-2.5 py-1 rounded-full">Pilihan Ganda</span>
+                        <span id="play-q-indicator" class="text-[11px] font-bold bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full">Indikator</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="showQuestionHint()" class="btn-3d bg-yellow-300 hover:bg-yellow-200 text-yellow-950 font-bold text-xs sm:text-sm px-3 py-1.5 rounded-xl flex items-center gap-1">
+                            <span>💡</span> Petunjuk
+                        </button>
+                        <button id="btn-speak" onclick="speakQuestion()" class="btn-3d bg-sky-400 hover:bg-sky-300 text-sky-950 font-bold text-xs sm:text-sm px-3 py-1.5 rounded-xl flex items-center gap-1">
+                            <span>🔊</span> Bacakan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Kotak Petunjuk (Hidden by default) -->
+                <div id="play-hint-box" class="hidden bg-amber-50 border-2 border-amber-300 rounded-2xl p-3 text-sm font-bold text-amber-900 flex items-center gap-2 animate-pop">
+                    <span class="text-xl">💡</span>
+                    <span id="play-hint-text">Petunjuk soal...</span>
+                </div>
+
+                <!-- Visual Pendukung (SVG / Gambar / Arab) -->
+                <div id="play-visual" class="hidden flex justify-center items-center bg-sky-50/90 border-2 border-dashed border-sky-200 rounded-2xl p-3 sm:p-4"></div>
+
+                <!-- Teks Pertanyaan -->
+                <div class="text-center py-1">
+                    <p id="play-question-text" class="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-800 leading-relaxed"></p>
+                </div>
+
+                <!-- AREA INTERAKSI DINAMIS (7 TIPE SOAL) -->
+                <div id="play-interaction-area" class="pt-2"></div>
+
+                <!-- PANEL UMPAN BALIK -->
+                <div id="play-feedback" class="hidden rounded-2xl p-4 sm:p-5 border-2 animate-pop mt-4">
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="flex items-start gap-3 text-center sm:text-left">
+                            <span id="fb-icon" class="text-4xl">🌟</span>
+                            <div>
+                                <h4 id="fb-title" class="font-fredoka font-bold text-lg sm:text-xl">Hebat!</h4>
+                                <p id="fb-text" class="text-sm sm:text-base font-semibold mt-0.5"></p>
+                            </div>
+                        </div>
+                        <button id="fb-action-btn" class="btn-3d w-full sm:w-auto flex-shrink-0 bg-sky-600 text-white font-fredoka font-bold text-base sm:text-lg px-6 py-3 rounded-2xl">
+                            Lanjut ➡️
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 6. HALAMAN HASIL SESI ==================== -->
+        <section id="view-result" class="hidden animate-pop max-w-2xl mx-auto">
+            <div class="bg-white rounded-3xl p-6 sm:p-9 shadow-xl border-b-8 border-amber-300 text-center space-y-5">
+                <div id="res-emoji" class="text-7xl sm:text-8xl animate-bounce">🏆</div>
+                <div>
+                    <span id="res-badge-pill" class="inline-block bg-purple-100 text-purple-800 font-extrabold text-xs sm:text-sm px-4 py-1 rounded-full mb-2">
+                        Petualangan Selesai!
+                    </span>
+                    <h2 id="res-title" class="text-2xl sm:text-4xl font-bold text-sky-950">Wah, Kamu Hebat!</h2>
+                    <p id="res-message" class="text-slate-600 font-bold text-sm sm:text-base mt-1">
+                        Setiap jawaban membuatmu semakin pintar. Yuk, terus kumpulkan bintang!
+                    </p>
+                </div>
+
+                <!-- Statistik 4 Kolom -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-sky-50 p-3.5 rounded-2xl border-2 border-sky-200">
+                    <div class="bg-white p-3 rounded-xl">
+                        <p class="text-[11px] font-extrabold text-slate-400 uppercase">Total Soal</p>
+                        <p id="res-total" class="font-fredoka text-2xl font-bold text-slate-800">5</p>
+                    </div>
+                    <div class="bg-white p-3 rounded-xl">
+                        <p class="text-[11px] font-extrabold text-slate-400 uppercase">Benar / Salah</p>
+                        <p class="font-fredoka text-2xl font-bold"><span id="res-correct" class="text-emerald-600">5</span> / <span id="res-wrong" class="text-rose-500">0</span></p>
+                    </div>
+                    <div class="bg-white p-3 rounded-xl">
+                        <p class="text-[11px] font-extrabold text-slate-400 uppercase">Nilai</p>
+                        <p id="res-percent" class="font-fredoka text-2xl font-bold text-indigo-600">100%</p>
+                    </div>
+                    <div class="bg-white p-3 rounded-xl">
+                        <p class="text-[11px] font-extrabold text-slate-400 uppercase">Bintang</p>
+                        <p id="res-stars" class="font-fredoka text-2xl font-bold text-amber-500">+5 ⭐</p>
+                    </div>
+                </div>
+
+                <!-- Analisis Indikator Dikuasai & Perlu Latihan -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+                    <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3.5">
+                        <h4 class="font-fredoka font-bold text-emerald-900 text-sm mb-1.5">✅ Sudah Dikuasai:</h4>
+                        <ul id="res-mastered-list" class="text-xs font-bold text-emerald-800 space-y-1"></ul>
+                    </div>
+                    <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3.5">
+                        <h4 class="font-fredoka font-bold text-amber-900 text-sm mb-1.5">💪 Perlu Latihan Lagi:</h4>
+                        <ul id="res-weak-list" class="text-xs font-bold text-amber-800 space-y-1"></ul>
+                    </div>
+                </div>
+
+                <!-- Tombol Navigasi Hasil -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                    <button onclick="replayLastSession()" class="btn-3d bg-amber-400 text-amber-950 font-fredoka font-bold text-base py-3.5 rounded-2xl">
+                        🔄 MAIN LAGI
+                    </button>
+                    <button onclick="navigate('study')" class="btn-3d bg-sky-500 text-white font-fredoka font-bold text-base py-3.5 rounded-2xl">
+                        📖 BELAJAR MATERI
+                    </button>
+                    <button onclick="navigate('map')" class="btn-3d bg-indigo-600 text-white font-fredoka font-bold text-base py-3.5 rounded-2xl">
+                        🗺️ KEMBALI KE PETA
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 7. LEMARI LENCANA / BADGE ==================== -->
+        <section id="view-badges" class="hidden animate-pop space-y-5">
+            <div class="flex items-center justify-between bg-white p-4 rounded-3xl shadow-sm border-2 border-purple-200">
+                <button onclick="navigate('home')" class="btn-3d bg-slate-100 text-slate-700 font-bold px-4 py-2 rounded-2xl text-sm">⬅️ Beranda</button>
+                <h2 class="text-xl sm:text-2xl font-bold text-purple-950">🏆 Koleksi Lencana Bintang</h2>
+                <span id="badges-page-count" class="text-xs sm:text-sm font-extrabold bg-purple-100 text-purple-800 px-3 py-1 rounded-full">0/13</span>
+            </div>
+            <div id="badges-collection-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5"></div>
+        </section>
+
+        <!-- ==================== 8. DASHBOARD ORANG TUA (TERKUNCI PIN) ==================== -->
+        <section id="view-parent" class="hidden animate-pop space-y-5">
+            <div class="bg-slate-900 text-white rounded-3xl p-5 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+                <div>
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-amber-400">Panel Pendampingan Orang Tua & Guru</span>
+                    <h2 class="text-xl sm:text-2xl font-bold">Laporan Belajar: <span id="parent-child-name">Anak Hebat</span></h2>
+                </div>
+                <button onclick="navigate('home')" class="btn-3d bg-white text-slate-900 font-bold px-4 py-2 rounded-2xl text-sm">
+                    Keluar Mode Orang Tua
+                </button>
+            </div>
+
+            <!-- Ringkasan Angka -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-bold text-slate-400">Total Bintang</p>
+                    <p id="par-stars" class="font-fredoka text-2xl font-bold text-amber-500">0 ⭐</p>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-bold text-slate-400">Sesi Selesai</p>
+                    <p id="par-sessions" class="font-fredoka text-2xl font-bold text-sky-600">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-bold text-slate-400">Bank Soal Aktif</p>
+                    <p id="par-qcount" class="font-fredoka text-2xl font-bold text-indigo-600">0 Soal</p>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-bold text-slate-400">Lencana Diraih</p>
+                    <p id="par-badges" class="font-fredoka text-2xl font-bold text-emerald-600">0 / 13</p>
+                </div>
+            </div>
+
+            <!-- Penguasaan Per Mata Pelajaran -->
+            <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-3">
+                <h3 class="text-lg font-bold text-slate-800">📊 Penguasaan Per Mata Pelajaran (13 Mapel)</h3>
+                <div id="par-subject-bars" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+            </div>
+
+            <!-- Indikator Perlu Latihan & Soal Salah -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div class="bg-white rounded-3xl p-5 border border-rose-200 shadow-sm space-y-3">
+                    <h3 class="text-lg font-bold text-rose-900">🎯 Rekomendasi Indikator Perlu Dilatih</h3>
+                    <div id="par-weak-indicators" class="space-y-2 max-h-72 overflow-y-auto"></div>
+                </div>
+                <div class="bg-white rounded-3xl p-5 border border-amber-200 shadow-sm space-y-3">
+                    <h3 class="text-lg font-bold text-amber-900">📝 Catatan Soal Salah / Perlu Dicek</h3>
+                    <div id="par-wrong-log" class="space-y-2 max-h-72 overflow-y-auto"></div>
+                </div>
+            </div>
+
+            <!-- Riwayat Sesi -->
+            <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-3">
+                <h3 class="text-lg font-bold text-slate-800">🕒 Riwayat Sesi Permainan Terakhir</h3>
+                <div id="par-history-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
+            </div>
+
+            <!-- Pengaturan Data & PIN -->
+            <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="changeParentPin()" class="bg-slate-800 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl">🔑 Ubah PIN</button>
+                    <button onclick="exportProgressJSON()" class="bg-sky-600 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl">📤 Export Backup</button>
+                    <label class="bg-emerald-600 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl cursor-pointer">
+                        📥 Import Backup
+                        <input type="file" accept=".json" onchange="importProgressJSON(event)" class="hidden">
+                    </label>
+                </div>
+                <button onclick="confirmResetAllData()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl">
+                    🗑️ Reset Semua Progress
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==================== MODAL PIN ORANG TUA ==================== -->
+    <div id="modal-pin" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border-4 border-slate-300 animate-pop space-y-4">
+            <div class="text-5xl">🔒</div>
+            <h3 class="font-fredoka text-2xl font-bold text-slate-800">Area Orang Tua</h3>
+            <p class="text-xs sm:text-sm font-bold text-slate-500">Masukkan 4 digit PIN Orang Tua (Default: 1234)</p>
+            <input type="password" id="pin-input" maxlength="4" inputmode="numeric" placeholder="••••" class="w-40 mx-auto text-center text-3xl tracking-widest font-fredoka font-bold p-3 rounded-2xl border-2 border-slate-300 focus:border-sky-500 outline-none">
+            <p id="pin-error" class="hidden text-xs font-extrabold text-rose-600">PIN salah! Coba lagi ya.</p>
+            <div class="flex justify-center gap-3 pt-2">
+                <button onclick="closePinModal()" class="btn-3d bg-slate-200 text-slate-700 font-bold px-5 py-2.5 rounded-xl">Batal</button>
+                <button onclick="verifyParentPin()" class="btn-3d bg-sky-600 text-white font-bold px-5 py-2.5 rounded-xl">Masuk</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL DIALOG KUSTOM ==================== -->
+    <div id="modal-dialog" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-2xl border-4 border-amber-300 animate-pop space-y-4">
+            <div id="dlg-icon" class="text-5xl">🌟</div>
+            <h3 id="dlg-title" class="font-fredoka text-2xl font-bold text-slate-800">Judul</h3>
+            <p id="dlg-body" class="text-sm sm:text-base font-semibold text-slate-600"></p>
+            <div id="dlg-input-wrap" class="hidden">
+                <input type="text" id="dlg-input" class="w-full p-3 rounded-2xl border-2 border-sky-300 font-bold text-center text-lg outline-none">
+            </div>
+            <div class="flex justify-center gap-3 pt-2">
+                <button id="dlg-cancel" onclick="closeDialog()" class="btn-3d bg-slate-200 text-slate-700 font-bold px-5 py-2.5 rounded-xl">Batal</button>
+                <button id="dlg-ok" class="btn-3d bg-sky-600 text-white font-bold px-5 py-2.5 rounded-xl">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modul JavaScript Terpisah -->
+    <script src="data.js"></script>
+    <script src="questions.js"></script>
+    <script src="app.js"></script>
+
+    <!-- Registrasi Service Worker PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            });
+        }
+    </script>
+</body>
+</html>
